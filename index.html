@@ -46,28 +46,42 @@
             z-index: 10;
         }
 
-        /* Нижний слой: состояние GOOD (Зеленые штрихи) */
-        .layer-base {
+        /* СЛОЙ 1: Статичный оригинал (сохраняет оригинальную легенду в углу) */
+        .layer-static {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('IMG_1167.png'); 
             background-size: contain; 
             background-repeat: no-repeat;
             background-position: center bottom;
-            /* Сдвигаем красный спектр в зеленый (около 120 градусов) */
-            filter: hue-rotate(120deg) saturate(1.5) brightness(0.95);
             z-index: 1;
         }
 
-        /* Верхний слой: состояние BAD (Оригинальные красные штрихи) */
-        .layer-fill {
+        /* СЛОЙ 2: Зеленое состояние (Добро) */
+        .layer-green {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('IMG_1167.png'); 
+            background-size: contain; 
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            /* Преобразуем красные штрихи в зеленые */
+            filter: hue-rotate(120deg) saturate(1.5) brightness(0.95);
+            z-index: 2;
+            /* ГЕОМЕТРИЧЕСКИЙ ОБХОД: Вырезаем правый нижний угол, чтобы не перекрашивать легенду */
+            clip-path: polygon(0% 0%, 100% 0%, 100% 82%, 75% 82%, 75% 100%, 0% 100%);
+        }
+
+        /* СЛОЙ 3: Красное состояние (Злобность) */
+        .layer-red {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('IMG_1167.png'); 
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center bottom;
-            z-index: 2;
+            z-index: 3;
+            /* Управляется скриптом */
             clip-path: inset(50% 0 0 0); 
             will-change: clip-path; 
         }
@@ -100,7 +114,7 @@
             min-width: 80px;
         }
 
-        /* Ползунок */
+        /* Стилизация ползунка */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -144,10 +158,10 @@
 <body>
 
     <div class="monitor-display">
-        <!-- Слой Добро (Зеленый) -->
-        <div class="layer-base" id="baseLayer"></div>
-        <!-- Слой Злобность (Красный) -->
-        <div class="layer-fill" id="fillLayer"></div>
+        <!-- Трёхслойная архитектура рендеринга -->
+        <div class="layer-static"></div>
+        <div class="layer-green"></div>
+        <div class="layer-red" id="fillLayer"></div>
     </div>
 
     <div class="control-panel">
@@ -166,10 +180,6 @@
         const fillLayer = document.getElementById('fillLayer');
         const telemetry = document.getElementById('telemetryValue');
 
-        // Математическая модель масштабирования отсечения
-        // Фактическая верхняя граница красных чернил на изображении находится примерно на 28% от верха
-        const physicalTopInkLimit = 28; 
-
         // Инициализация при загрузке
         updateTelemetry(slider.value);
 
@@ -180,27 +190,23 @@
         function updateTelemetry(value) {
             const val = parseInt(value, 10);
             
-            // Расчет отсечения. 
-            // 0% злобности = 100% отсечения (видно только зеленое)
-            // 100% злобности = 28% отсечения (открыта вся физически доступная красная краска до носа)
-            const fillRatio = val / 100;
-            const clipTop = 100 - (fillRatio * (100 - physicalTopInkLimit)); 
+            // Расчет отсечения (Сняты лимиты). 
+            // 100% Злобности = 0% отсечения сверху (полностью открывает слой 3 до самого верха холста).
+            // 0% Злобности = 100% отсечения сверху (слой 3 полностью скрыт).
+            const clipTop = 100 - val; 
             
             fillLayer.style.clipPath = `inset(${clipTop}% 0 0 0)`;
             telemetry.textContent = val + '%';
             
-            // Цветовая кодировка телеметрии в зависимости от уровня "Злобности"
+            // Цветовая кодировка телеметрии
             if (val <= 30) {
-                // Низкая злобность (Добро) - Зеленый
-                telemetry.style.color = '#00ffcc'; 
+                telemetry.style.color = '#00ffcc'; // Зеленый
                 telemetry.style.textShadow = '0 0 10px rgba(0, 255, 204, 0.6)';
             } else if (val >= 70) {
-                // Высокая злобность (Зло) - Красный
-                telemetry.style.color = '#ff003c'; 
+                telemetry.style.color = '#ff003c'; // Красный
                 telemetry.style.textShadow = '0 0 10px rgba(255, 0, 60, 0.6)';
             } else {
-                // Переходное состояние - Желтый
-                telemetry.style.color = '#ffaa00'; 
+                telemetry.style.color = '#ffaa00'; // Желтый
                 telemetry.style.textShadow = '0 0 10px rgba(255, 170, 0, 0.6)';
             }
         }
