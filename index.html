@@ -26,7 +26,7 @@
             position: relative;
             width: 320px; 
             height: 640px;
-            background-color: #0a0a0a;
+            background-color: #ffffff; /* Белая подложка для корректного отображения */
             border-radius: 4px;
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 30px rgba(0, 0, 0, 0.8);
             overflow: hidden;
@@ -49,33 +49,16 @@
             z-index: 10;
         }
 
-        /* Текст-заглушка при отсутствии локального файла */
-        .no-signal-text {
-            position: absolute;
-            color: #ff003c;
-            text-align: center;
-            font-size: 0.9rem;
-            letter-spacing: 2px;
-            z-index: 0;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
-
         /* Базовый слой: обесцвеченный контур */
         .layer-base {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* Загрузка локального файла */
-            background-image: url('vika.png'); 
+            /* ИНТЕГРАЦИЯ ФАЙЛА ИЗ ВАШЕГО РЕПОЗИТОРИЯ */
+            background-image: url('IMG_1167.png'); 
             background-size: cover;
             background-position: center;
-            /* Превращаем цветное изображение в серый чертеж */
-            filter: grayscale(100%) brightness(0.8) contrast(1.2);
+            /* Превращаем цветное изображение в серый набросок */
+            filter: grayscale(100%) brightness(1.1) contrast(1.1);
             z-index: 1;
         }
 
@@ -83,15 +66,13 @@
         .layer-fill {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* Загрузка локального файла */
-            background-image: url('vika.png'); 
+            /* ИНТЕГРАЦИЯ ФАЙЛА ИЗ ВАШЕГО РЕПОЗИТОРИЯ */
+            background-image: url('IMG_1167.png'); 
             background-size: cover;
             background-position: center;
             z-index: 2;
-            /* Динамическое отсечение сверху. 50% по умолчанию */
+            /* Динамическое отсечение сверху. Будет меняться скриптом */
             clip-path: inset(50% 0 0 0); 
-            /* Если исходное изображение не красное, можно раскомментировать фильтр ниже */
-            /* filter: sepia(100%) saturate(1000%) hue-rotate(-50deg); */
         }
 
         /* Терминал управления */
@@ -171,7 +152,6 @@
 
     <!-- Дисплей визуализации объекта -->
     <div class="monitor-display">
-        <div class="no-signal-text">SYS.ERR: ФАЙЛ vika.png<br>НЕ НАЙДЕН В ДИРЕКТОРИИ</div>
         <div class="layer-base" id="baseLayer"></div>
         <div class="layer-fill" id="fillLayer"></div>
     </div>
@@ -198,7 +178,7 @@
         slider.addEventListener('input', function() {
             const val = parseInt(this.value, 10);
             
-            // Расчет смещения отсекающей маски (100% - пусто, 0% - заполнено полностью)
+            // Расчет смещения отсекающей маски
             const clipTop = 100 - val; 
             fillLayer.style.clipPath = `inset(${clipTop}% 0 0 0)`;
             telemetry.textContent = val + '%';
