@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Модуль калибровки: Проект ВИКА</title>
     <style>
-        /* Инициализация системного интерфейса J.A.R.V.I.S. */
+        /* Системный интерфейс J.A.R.V.I.S. */
         body {
             display: flex;
             flex-direction: column;
@@ -21,91 +21,86 @@
             user-select: none;
         }
 
-        /* Основной контейнер экрана */
+        /* Контейнер визуализации */
         .monitor-display {
             position: relative;
-            width: 320px; 
-            height: 640px;
-            background-color: #ffffff; /* Белая подложка для корректного отображения */
+            width: 360px; 
+            height: 750px; 
+            background-color: #ffffff; 
             border-radius: 4px;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 30px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 10px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             border: 1px solid #00f3ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        /* Декоративная сетка сканирования */
+        /* Сетка сканирования */
         .monitor-display::after {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
             background-size: 20px 20px;
             pointer-events: none;
             z-index: 10;
         }
 
-        /* Базовый слой: обесцвеченный контур */
+        /* Нижний слой: состояние GOOD (Зеленые штрихи) */
         .layer-base {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* ИНТЕГРАЦИЯ ФАЙЛА ИЗ ВАШЕГО РЕПОЗИТОРИЯ */
             background-image: url('IMG_1167.png'); 
-            background-size: cover;
-            background-position: center;
-            /* Превращаем цветное изображение в серый набросок */
-            filter: grayscale(100%) brightness(1.1) contrast(1.1);
+            background-size: contain; 
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            /* Сдвигаем красный спектр в зеленый (около 120 градусов) */
+            filter: hue-rotate(120deg) saturate(1.5) brightness(0.95);
             z-index: 1;
         }
 
-        /* Активный слой: оригинальное красное заполнение */
+        /* Верхний слой: состояние BAD (Оригинальные красные штрихи) */
         .layer-fill {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* ИНТЕГРАЦИЯ ФАЙЛА ИЗ ВАШЕГО РЕПОЗИТОРИЯ */
             background-image: url('IMG_1167.png'); 
-            background-size: cover;
-            background-position: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center bottom;
             z-index: 2;
-            /* Динамическое отсечение сверху. Будет меняться скриптом */
             clip-path: inset(50% 0 0 0); 
+            will-change: clip-path; 
         }
 
-        /* Терминал управления */
+        /* Панель управления (Терминал) */
         .control-panel {
             margin-top: 20px;
-            width: 320px;
+            width: 360px;
             background: rgba(10, 10, 10, 0.8);
             padding: 20px;
             border-radius: 4px;
             border: 1px solid rgba(0, 243, 255, 0.3);
             box-sizing: border-box;
             text-align: center;
-            position: relative;
         }
 
         .status-header {
             font-size: 1rem;
             margin-bottom: 15px;
-            text-transform: uppercase;
             letter-spacing: 1px;
             color: #aaa;
         }
 
         .telemetry-value {
             font-size: 1.8rem;
-            color: #ff003c;
+            color: #ffaa00;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(255, 0, 60, 0.6);
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.6);
             display: inline-block;
             min-width: 80px;
         }
 
-        /* Стилизация ползунка */
+        /* Ползунок */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -115,9 +110,7 @@
             z-index: 2;
         }
 
-        input[type="range"]:focus {
-            outline: none;
-        }
+        input[type="range"]:focus { outline: none; }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -150,51 +143,67 @@
 </head>
 <body>
 
-    <!-- Дисплей визуализации объекта -->
     <div class="monitor-display">
+        <!-- Слой Добро (Зеленый) -->
         <div class="layer-base" id="baseLayer"></div>
+        <!-- Слой Злобность (Красный) -->
         <div class="layer-fill" id="fillLayer"></div>
     </div>
 
-    <!-- Модуль ручной калибровки -->
     <div class="control-panel">
         <div class="status-header">
-            УРОВЕНЬ СОСТОЯНИЯ: <span class="telemetry-value" id="telemetryValue">50%</span>
+            УРОВЕНЬ ЗЛОБНОСТИ: <span class="telemetry-value" id="telemetryValue">55%</span>
         </div>
-        <input type="range" id="calibrationSlider" min="0" max="100" value="50">
+        <input type="range" id="calibrationSlider" min="0" max="100" value="55">
         <div class="labels">
-            <span>[ BAD ]</span>
             <span>[ GOOD ]</span>
+            <span>[ BAD ]</span>
         </div>
     </div>
 
     <script>
-        // Инициализация аппаратных прерываний
         const slider = document.getElementById('calibrationSlider');
         const fillLayer = document.getElementById('fillLayer');
         const telemetry = document.getElementById('telemetryValue');
 
-        // Мониторинг положения ползунка в реальном времени
+        // Математическая модель масштабирования отсечения
+        // Фактическая верхняя граница красных чернил на изображении находится примерно на 28% от верха
+        const physicalTopInkLimit = 28; 
+
+        // Инициализация при загрузке
+        updateTelemetry(slider.value);
+
         slider.addEventListener('input', function() {
-            const val = parseInt(this.value, 10);
+            updateTelemetry(this.value);
+        });
+
+        function updateTelemetry(value) {
+            const val = parseInt(value, 10);
             
-            // Расчет смещения отсекающей маски
-            const clipTop = 100 - val; 
+            // Расчет отсечения. 
+            // 0% злобности = 100% отсечения (видно только зеленое)
+            // 100% злобности = 28% отсечения (открыта вся физически доступная красная краска до носа)
+            const fillRatio = val / 100;
+            const clipTop = 100 - (fillRatio * (100 - physicalTopInkLimit)); 
+            
             fillLayer.style.clipPath = `inset(${clipTop}% 0 0 0)`;
             telemetry.textContent = val + '%';
             
-            // Цветовая индикация критических состояний
+            // Цветовая кодировка телеметрии в зависимости от уровня "Злобности"
             if (val <= 30) {
-                telemetry.style.color = '#ff003c'; // Красный (Критически низкий)
-                telemetry.style.textShadow = '0 0 10px rgba(255, 0, 60, 0.6)';
-            } else if (val >= 70) {
-                telemetry.style.color = '#00ffcc'; // Бирюзовый (Оптимальный)
+                // Низкая злобность (Добро) - Зеленый
+                telemetry.style.color = '#00ffcc'; 
                 telemetry.style.textShadow = '0 0 10px rgba(0, 255, 204, 0.6)';
+            } else if (val >= 70) {
+                // Высокая злобность (Зло) - Красный
+                telemetry.style.color = '#ff003c'; 
+                telemetry.style.textShadow = '0 0 10px rgba(255, 0, 60, 0.6)';
             } else {
-                telemetry.style.color = '#ffaa00'; // Желтый (Переходный)
+                // Переходное состояние - Желтый
+                telemetry.style.color = '#ffaa00'; 
                 telemetry.style.textShadow = '0 0 10px rgba(255, 170, 0, 0.6)';
             }
-        });
+        }
     </script>
 
 </body>
